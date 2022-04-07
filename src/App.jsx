@@ -5,17 +5,19 @@ import { HistoryOutlined } from '@material-ui/icons'
 function App() {
   const [calc, setCalc] = useState('');
   const [previewResult, setPreviewResult] = useState('0');
+  const [openHistory, setOpenHistory] = useState(false);
 
   const ops = ['/', '*', '-', '+', '.'];
 
-  let history = localStorage.getItem("history");
+  const history = localStorage.getItem('history') ? JSON.parse(localStorage.getItem('history')) : []
 
   const updateCalc = (value) => { 
 
     if(
       ops.includes(value) && calc === '' ||
       ops.includes(value) && ops.includes(calc.slice(-1)) ||
-      calc == '0' && value == '0'
+      calc == '0' && value == '0' ||
+      calc.length > 14
     ){
       return;
     }
@@ -27,15 +29,18 @@ function App() {
   }
 
   const updateResult = () => {
-    const finalResult = setCalc(eval(calc).toString());
-    setPreviewResult('');
     
+    const finalCalc = eval(calc).toString()
+    setCalc(finalCalc);
+    setPreviewResult('');
+
+    //SAVE IN LOCAL STORAGE
+    history.push(calc, finalCalc)
+    localStorage.setItem('history', JSON.stringify(history))
   }
 
   const deleteLastValue = () => {
-    if(calc == ''){
-      return;
-    }
+    if(calc == '') return
     const value = calc.slice(0, -1);
     setCalc(value);
   }
@@ -57,13 +62,17 @@ function App() {
   return (
      <div className="container">
        <div className="calculator">
-          <div className="iconContainer">
-            <div className='icon'>
-              <div className='asd'>
-              <HistoryOutlined/>
-              </div>
-              </div>
+          <button className="iconButton" onClick={ () => setOpenHistory(prev => !prev)}>
+            <HistoryOutlined/>
+          </button>
+          <div className={`history ${openHistory ? 'open' : ''}`}>
+            <h2>History</h2>
+            <div>
+              {history.map(item => (
+                <span>{item}</span>
+              ))}
             </div>
+          </div>
           <div className='display'>
             <span>{previewResult ? <span>({previewResult})</span> : ''}</span>{calc || '0'}
           </div>
